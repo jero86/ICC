@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+		<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Cuidados CMDX</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+	<!-- Mapas -->
+<script src="https://cdn.maptiler.com/mapbox-gl-js/v0.53.0/mapbox-gl.js"></script>
+<script src="https://cdn.maptiler.com/mapbox-gl-leaflet/latest/leaflet-mapbox-gl.js"></script>
+<link rel="stylesheet" href="https://cdn.maptiler.com/mapbox-gl-js/v0.53.0/mapbox-gl.css" />
+
+	<!-- Leaflet Plugins -->
+<link rel="stylesheet" href= "Control.MiniMap.css" />
+<script src="Control.MiniMap.js"></script>
+<link rel="stylesheet" href="leaflet-search-master\src\leaflet-search.css" />
+<script src="leaflet-search-master\src\leaflet-search.js"></script>
+<link rel="stylesheet" href="L.Control.Window.css" />
+<script src="L.Control.Window.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@drustack/leaflet.resetview/dist/L.Control.ResetView.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@drustack/leaflet.resetview/dist/L.Control.ResetView.min.js"></script>
+
+	<!-- Capa Geojson -->
+<script type="text/javascript" src="coloniasICC.js"></script>
+
+<style>
+	body {
+ padding: 0;
+ margin: 0;
+ color: #FFFFFF;
+ font-family: montserrat;
+ font-size: 1vw;
+}
+html, body, 
+#map {
+height: 98%;
+}
+#datos {
+ font-family: montserrat;
+ font-size: 0.7vw;
+}
+ .info {
+padding: 6px 8px;
+font: 14px/16px Montserrat, Montserrat, Montserrat;
+background: gray;
+background: rgba(255,255,255,0.8);
+box-shadow: 0 0 15px rgba(0,0,0,0.2);
+border-radius: 5px;
+}
+.info h2 {
+margin: 0 0 5px;
+color: #777;
+}
+.legend {
+ line-height: 18px;
+ color: #555;
+}
+.legend i {
+ width: 18px;
+ height: 18px;
+ float: left;
+ margin-right: 8px;
+ opacity: 0.7;
+}
+#layerForm{
+flex: 0 0 auto;
+margin-left:785px;
+}
+ 	</style>
+		</head>
+
+	<!-- Mapa base -->
+<div id = "map"> </div>
+<script type="text/javascript">
+	var map = L.map('map', {center: [19.347257, -99.136760],zoom: 11});
+var grises = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {minZoom: 5, maxZoom: 16}).addTo(map);
+var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {minZoom: 5, maxZoom: 16});
+
+//miniMapa
+var osm2 = new L.TileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {minZoom: 0,
+maxZoom: 13});
+var miniMap = new L.Control.MiniMap(osm2, { toggleDisplay: true }).addTo(map);
+
+	// Ventana emergente
+var win = L.control.window(map,{title:'Índice Chilango de los Cuidados',content:'Navega entre las diferentes colonias de la Ciudad de México para visualizar su comportamiento de acuerdo a las diferentes categorías que integran el índice de los cuidados, o puedes realizar la búsqueda de la colonia que te interese visualizar <i>(dando click en la lupa).</i><br>¿Qué tan adaptada a los cuidados es tu colonia?<br><br> Elaboración: Jerónimo Monroy @jerome.arq </br>', position: 'middle'}).show()
+
+	//Reseteo zoom
+L.control.resetView({
+        position: "topleft",
+        title: "Zoom original",
+        latlng: L.latLng([19.347257, -99.136760]),
+        zoom: 11,
+}).addTo(map);
+
+	//Capa ICC
+var coloniasICC = L.geoJSON(coloniasICC, {
+style: style,
+onEachFeature: popup
+})
+coloniasICC.bindTooltip(function (layer) {
+    return layer.feature.properties.colonia;
+ }).addTo(map);
+
+function style(feature) {
+return {
+fillColor: feature.properties.color,
+weight: .7,
+opacity: 1,
+color: 'gray',
+dashArray: '1',
+fillOpacity: .65
+};
+}
+function popup(feature, layer) {
+layer.bindPopup("<div style=text-align:center><h2>"+feature.properties.colonia+" </div><div style=text-align:center><b>Índice Chilango de los Cuidados: "+feature.properties.i_c_c+" </b></div><hr><table><tr><td style=text-align:left>Alcaldía:  "+feature.properties.alc+"</div><tr><td style=text-align:left>Tipo de asentamiento: "+feature.properties.clasif+"</td></tr><tr><td style=text-align:left>Población de la colonia: "+feature.properties.pob_col+"</td></tr><tr><td style=text-align:left>% Seguridad: "+feature.properties.seguridad+"</td></tr><tr><td style=text-align:left>% Movilidad: "+feature.properties.movilidad+"</td></tr><tr><td style=text-align:left>% Abasto: "+feature.properties.abasto+"</td></tr><tr><td style=text-align:left>% Salud: "+feature.properties.salud+"</td></tr><tr><td style=text-align:left>% Equipamiento: "+feature.properties.equipamien+"</td></tr><tr><td style=text-align:left>% Educación: "+feature.properties.educacion+"</td></tr><tr><td style=text-align:left>% Servicios públicos: "+feature.properties.servicios+"</td></tr><tr><td style=text-align:left>% Políticas públicas: "+feature.properties.pol_pub+"</td></tr></table>");
+}
+
+var baseLayers = {
+"Mapa en grises": grises,
+"Mapa satelital": Esri_WorldImagery
+};
+L.control.layers(baseLayers, null, {collapsed:false
+}).addTo(map);
+
+	//Buscador
+var searchControl = new L.Control.Search({
+layer: coloniasICC,
+propertyName: 'colonia',
+circleLocation: true,
+collapsed: true,
+initial: false,
+zoom: 14,
+hideMarkerOnCollapse: true,
+textPlaceholder: 'Busca aquí tu colonia'
+});
+map.addControl(searchControl);
+
+	//Leyenda
+function getcolor(value) {
+return value === 'valor1' ? '#FCFDBF' :
+value === 'valor2' ? '#FEBA80' :
+value === 'valor3' ? '#F8765C' :
+value === 'valor4' ? '#D3436E' :
+value === 'valor5' ? '#982D80' :
+value === 'valor6' ? '#5F187F' :
+value === 'valor7' ? '#231151' :
+value === 'valor8' ? '#000004' :
+'gray';
+}
+
+var legend = L.control({position: 'bottomleft'});
+
+legend.onAdd = function (map) {
+var div = L.DomUtil.create('div', 'info legend');
+div.innerHTML += '<h4>Índice Chilango<br>de los Cuidados<br><center>%</h4>';
+
+	// leyenda con colores y etiquetas
+  div.innerHTML += '<i style="background:' + getcolor('valor1') + '"></i> 66.8 - 78.8<br>';
+  div.innerHTML += '<i style="background:' + getcolor('valor2') + '"></i> 60.4 - 66.7<br>';
+  div.innerHTML += '<i style="background:' + getcolor('valor3') + '"></i> 54.6 - 60.3<br>';
+  div.innerHTML += '<i style="background:' + getcolor('valor4') + '"></i> 48.8 - 54.5<br>';
+  div.innerHTML += '<i style="background:' + getcolor('valor5') + '"></i> 43.4 - 48.7<br>';
+  div.innerHTML += '<i style="background:' + getcolor('valor6') + '"></i> 37.6 - 43.3<br>';
+  div.innerHTML += '<i style="background:' + getcolor('valor7') + '"></i> 29.8 - 37.5<br>';
+  div.innerHTML += '<i style="background:' + getcolor('valor8') + '"></i> 11.0 - 29.7<br>';
+
+return div;
+};
+
+legend.addTo(map);
+
+  </script>
+  <footer>
+      <p style="color: black; font-size:0.8vw; font-family: montserrat; text-align:center"><b>Índice Chilango de los Cuidados 2024 | Jerónimo Monroy Figueroa</b></p>
+    </footer>
+	</script>
+		</body>
+			</html>
